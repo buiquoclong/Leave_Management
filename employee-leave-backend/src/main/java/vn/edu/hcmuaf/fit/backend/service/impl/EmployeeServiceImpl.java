@@ -1,6 +1,7 @@
 package vn.edu.hcmuaf.fit.backend.service.impl;
 
 import org.springframework.stereotype.Service;
+import vn.edu.hcmuaf.fit.backend.dto.EmployeeDTO;
 import vn.edu.hcmuaf.fit.backend.exception.ResourceNotFoundException;
 import vn.edu.hcmuaf.fit.backend.model.Employee;
 import vn.edu.hcmuaf.fit.backend.repository.EmployeeRepository;
@@ -34,18 +35,16 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Employee updateEmployeeByID(Employee employee, int id) {
-//        Employee existingEmployee = employeeRepository.findById(id).orElseThrow(() ->
-//                new ResourceNotFoundException("Employee", "Id", id));
-//
-//        existingEmployee.setFullName(employee.getFullName());
-//        existingEmployee.setPhone(employee.getPhone());
-//        existingEmployee.setEmail(employee.getEmail());
-//        existingEmployee.setUpdateAt(LocalDateTime.now());
-//
-//        employeeRepository.save(existingEmployee);
+    public Employee updateEmployeeByID(EmployeeDTO employeeDTO, int id) {
+        Employee existingEmployee = employeeRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Employee", "Id", id));
 
-        return null;
+        existingEmployee.setFullName(employeeDTO.getFullName());
+        existingEmployee.setEmail(employeeDTO.getEmail());
+        existingEmployee.setUsername(employeeDTO.getUsername());
+        existingEmployee.setUpdatedAt(LocalDateTime.now());
+
+        return employeeRepository.save(existingEmployee);
     }
 
     @Override

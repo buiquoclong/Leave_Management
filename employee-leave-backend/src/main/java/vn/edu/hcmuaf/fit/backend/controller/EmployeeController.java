@@ -3,6 +3,7 @@ package vn.edu.hcmuaf.fit.backend.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import vn.edu.hcmuaf.fit.backend.dto.EmployeeDTO;
 import vn.edu.hcmuaf.fit.backend.model.Employee;
 import vn.edu.hcmuaf.fit.backend.service.EmployeeService;
 
@@ -41,7 +42,7 @@ public class EmployeeController {
     // Update Employee by id
     @PutMapping("{id}")
     public ResponseEntity<Employee> updateEmployeeById(@PathVariable ("id") int id,
-                                                   @RequestBody Employee employee) {
+                                                   @RequestBody EmployeeDTO employee) {
         return new ResponseEntity<>(employeeService.updateEmployeeByID(employee, id), HttpStatus.OK);
     }
 
