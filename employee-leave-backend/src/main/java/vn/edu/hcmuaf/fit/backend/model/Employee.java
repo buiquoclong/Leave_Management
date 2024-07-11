@@ -1,14 +1,13 @@
 package vn.edu.hcmuaf.fit.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 @Data
@@ -55,6 +54,9 @@ public class Employee {
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<LeaveApplications> applicationsList;
+    @JsonBackReference
+    @OneToMany(mappedBy = "employee")
+    List<PasswordResetToken> passwordResetTokens;
 
     public Employee(int id) {
         this.id = id;

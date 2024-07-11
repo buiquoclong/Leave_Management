@@ -7,11 +7,11 @@ import java.util.List;
 
 
 public interface LeaveAppsService {
-    LeaveApplications saveLeaveApps(int employeeId, LeaveApplicationsDTO leaveApps);
+    LeaveApplications saveLeaveApps(int employeeId, LeaveApplicationsDTO leaveApps) throws Exception;
     List<LeaveApplications> getAllLeaveApp();
     LeaveApplications getLeaveAppsByID(int id);
     List<LeaveApplications> getLeaveAppsByEmployeeId(int employeeId);
     List<LeaveApplications> getLeaveAppsByHandleById(int handleBy);
-    LeaveApplications approveLeaveAppsByID(int id, LeaveApplicationsDTO leaveApps);
+    LeaveApplications approveLeaveAppsByID(int id, LeaveApplicationsDTO leaveApps) throws Exception;
 //    void deleteLeaveAppsByID(int id);
 }
