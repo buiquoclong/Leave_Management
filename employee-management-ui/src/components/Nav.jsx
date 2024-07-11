@@ -173,10 +173,52 @@ function Nav() {
         }
     };
 
-    const handleChangePasswordSubmit = (event) => {
+    const handleChangePasswordSubmit = async (event) => {
         event.preventDefault();
-        // Logic xử lý form đổi mật khẩu
+    
+        const currentPassword = event.target.currentPassword.value;
+        const newPassword = event.target.newPassword.value;
+        const confirmNewPassword = event.target.confirmNewPassword.value;
+    
+        // Kiểm tra xem mật khẩu mới và nhập lại mật khẩu mới có giống nhau không
+        if (newPassword !== confirmNewPassword) {
+            alert("Mật khẩu mới và nhập lại mật khẩu mới không giống nhau");
+            return;
+        }
+    
+        const storedId = sessionStorage.getItem('userId');
+        try {
+            // Gọi API để đổi mật khẩu
+            const response = await fetch(`http://localhost:8081/api/employees/change-password/${storedId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    old_password: currentPassword,
+                    new_password: newPassword,
+                }),
+            });
+    
+            // Lấy phản hồi dưới dạng văn bản
+            const result = await response.text();
+    
+            if (response.ok) {
+                // Xử lý thành công
+                alert(result || "Đổi mật khẩu thành công");
+                // Đóng popup hoặc làm các hành động khác
+                setIsChangePasswordPopupOpen(false);
+            } else {
+                // Xử lý lỗi từ server
+                alert(`Lỗi: ${result || 'Đã có lỗi xảy ra'}`);
+            }
+        } catch (error) {
+            // Xử lý lỗi khi gọi API
+            alert(`Lỗi: ${error.message || 'Đã có lỗi xảy ra'}`);
+        }
     };
+    
+    
     const handleProfileSubmit = (event) => {
         event.preventDefault();
         const storedId = sessionStorage.getItem('userId');
