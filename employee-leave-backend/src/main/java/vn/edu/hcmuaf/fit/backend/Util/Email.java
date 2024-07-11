@@ -43,7 +43,7 @@ public class Email {
         MimeMessage msg = new MimeMessage(session);
         try {
             msg.addHeader("Content-tyoe", "text/HTML; charset=UTF-8");
-            Address address = new InternetAddress(from, "Focus App");
+            Address address = new InternetAddress(from, "Tile Market");
             msg.setFrom(address);
             msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to, false));
             msg.setSubject(subject);
