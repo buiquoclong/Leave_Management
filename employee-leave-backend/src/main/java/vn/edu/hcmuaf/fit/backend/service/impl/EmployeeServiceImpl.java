@@ -30,7 +30,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private Email emailUtil;
     @Autowired
     private PasswordUtil passwordUtil;
-    private String link = "http://localhost:8081";
+    private String link = "http://localhost:3000";
 
     public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
         this.employeeRepository = employeeRepository;
@@ -75,16 +75,17 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public String login(String username, String pass) {
-        Employee e = employeeRepository.findByUsernameAndPassword(username, pass);
+        String encryptedPass = passwordUtil.hashPassword(pass);
+        Employee e = employeeRepository.findByUsernameAndPassword(username, encryptedPass);
 //        System.out.println(e.getUsername());
         if (e != null) return e.getId() + "";
-        return "user khong dung";
+        return "Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin đăng nhập!";
     }
 
     @Override
     public String forgotPassword(String email) throws Exception {
         Employee e = employeeRepository.findByEmail(email);
-        if (e != null) return "email chưa tồn tại trong hệ thống.";
+        if (e == null) return "email chưa tồn tại trong hệ thống.";
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime timeValid = now.plusMinutes(5);
         String token = saltStringUtil.getSaltString();
@@ -94,9 +95,10 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .employee(e)
                 .build();
         passwordResetTokenReponsitory.save(passwordResetToken);
-        String resetLink = link + "/api/employees?token=" + token + "&employeeId=" + e.getId();
+//        sửa lại đường link sau khi tạo ra trang xong nha
+        String resetLink = link + "/api/reset-password?token=" + token + "&employeeId=" + e.getId();
         Map<String, String> values = Map.of("link", resetLink);
-        emailUtil.sendMailWithTemplate(e.getEmail(), "Xử lý yêu cầu nghỉ phép", "handle-request", values);
+        emailUtil.sendMailWithTemplate(e.getEmail(), "Đặt lại mật khẩu", "reset-password", values);
         return "Link đặt lại mật khẩu đã được gửi đến email của bạn! Vui lòng tiến hành đặt lại mật khẩu trong vòng 5 phút!";
     }
 

@@ -104,7 +104,7 @@ public class LeaveAppsServiceImpl implements LeaveAppsService {
         Employee sender = employeeService.getEmployeeByID(existingLeaveApp.getEmployee().getId());
         Employee receiver = employeeService.getEmployeeByID(existingLeaveApp.getHandleBy().getId());
         String status = "";
-        String reason = "";
+
         switch (leaveApps.getStatus()) {
             case 0:
                 status = "Không chấp nhận";
@@ -116,9 +116,11 @@ public class LeaveAppsServiceImpl implements LeaveAppsService {
                 status = "Đang chờ được xét duyệt";
                 break;
         }
+        String reason = "";
         if (leaveApps.getReasonReject().isEmpty()) {
             reason = "Không có.";
         }
+        reason = leaveApps.getReasonReject();
         Map<String, String> values = Map.of(
                 "leaveID", String.valueOf(existingLeaveApp.getId()),
                 "sender", sender.getFullName(),
