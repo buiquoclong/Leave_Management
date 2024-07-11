@@ -75,10 +75,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public String login(String username, String pass) {
-        String encryptedPass = passwordUtil.hashPassword(pass);
-        Employee e = employeeRepository.findByUsernameAndPassword(username, encryptedPass);
-//        System.out.println(e.getUsername());
-        if (e != null) return e.getId() + "";
+        Employee e = employeeRepository.findByUsername(username);
+        if (e != null && passwordUtil.checkPass(pass, e.getPassword())) {
+            return e.getId() + "";
+        }
         return "Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin đăng nhập!";
     }
 
@@ -118,9 +118,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public String updatePassword(PasswordDTO passwordDTO, int employeeId) throws Exception {
-        Employee e = employeeRepository.findById( employeeId).orElseThrow(() ->
+        Employee e = employeeRepository.findById(employeeId).orElseThrow(() ->
                 new ResourceNotFoundException("Employee", "Id", employeeId));
-        if(!passwordUtil.checkPass(passwordDTO.getOldPassword(), e.getPassword())) {
+        if (!passwordUtil.checkPass(passwordDTO.getOldPassword(), e.getPassword())) {
             return "Mật khẩu cũ không đúng! Vui lòng thử lại";
         }
         e.setPassword(passwordUtil.hashPassword(passwordDTO.getNewPassword()));
