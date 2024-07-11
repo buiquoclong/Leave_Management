@@ -14,6 +14,7 @@ function Nav() {
     const [isChangePasswordPopupOpen, setIsChangePasswordPopupOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
+    const [isLoading , setIsLoading] = useState(false);
 
     const router = useRouter();
     const dropdownRef = useRef(null);
@@ -88,7 +89,7 @@ function Nav() {
     };
 
     // Nhấn gửi đơn
-    const handleSubmit =  (event) => {
+    const handleSubmit =  async (event) => {
         event.preventDefault();
 
         const storedId = sessionStorage.getItem('userId');
@@ -101,35 +102,42 @@ function Nav() {
             alert("Vui lòng chọn ngày nghỉ trước khi gửi!");
             return;
         } else {
+            closePopup();
+            // Đánh dấu bắt đầu gửi dữ liệu
+            setIsLoading(true);
             const requestData = {
                 reason: event.target.reason.value,
                 from: startDate,
                 to: endDate
-
             };
             // Gửi dữ liệu
-            fetch(`http://localhost:8081/api/leave-applications/save?employeeId=${storedId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestData)
-            })
-                .then(response => {
-                    if (response.ok) {
-                        console.log('Dữ liệu đã được gửi thành công!');
-
-                        closePopup();
-                        alert("Bạn đã gửi đơn đăng ký thành công")
-                        setStartDate("")
-                        setEndDate("")
-                        // Thực hiện các hành động khác (ví dụ: hiển thị thông báo)
-                    } else {
-                        console.error('Đã xảy ra lỗi khi gửi dữ liệu.');
-                        // Xử lý lỗi nếu cần
-                    }
-                })
-                .catch(error => console.error('Lỗi:', error));
+            try {
+                const response = await fetch(`http://localhost:8081/api/leave-applications/save?employeeId=${storedId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+        
+                if (response.ok) {
+                    setIsLoading(false);
+                    toast.success("Bạn đã gửi đơn đăng ký thành công", {
+                        onClose: () => window.location.reload() // Reload lại trang sau khi toast hiện
+                    });
+                    props.onNewLeaveApplication(newLeaveApplication);
+                    setStartDate("");
+                    setEndDate("");
+                    // Thực hiện các hành động khác (ví dụ: hiển thị thông báo)
+                } else {
+                    setIsLoading(false);
+                    toast.error("Gửi đơn đăng ký thất bại!");
+                    // Xử lý lỗi nếu cần
+                }
+            } catch (error) {
+                setIsLoading(false);
+                console.error('Lỗi:', error);
+            }
 
 
 
@@ -186,6 +194,10 @@ function Nav() {
             return;
         }
     
+        
+        setIsChangePasswordPopupOpen(false);
+        // Đánh dấu bắt đầu gửi dữ liệu
+        setIsLoading(true);
         const storedId = sessionStorage.getItem('userId');
         try {
             // Gọi API để đổi mật khẩu
@@ -205,45 +217,64 @@ function Nav() {
     
             if (response.ok) {
                 // Xử lý thành công
-                alert(result || "Đổi mật khẩu thành công");
-                // Đóng popup hoặc làm các hành động khác
-                setIsChangePasswordPopupOpen(false);
+                if (result === "Đổi mật khẩu thành công!") {
+                    setIsLoading(false);
+                    toast.success(result || "Đổi mật khẩu thành công");
+                } else {
+                    setIsLoading(false);
+                    toast.error(result || 'Đã có lỗi xảy ra');
+                }
             } else {
                 // Xử lý lỗi từ server
-                alert(`Lỗi: ${result || 'Đã có lỗi xảy ra'}`);
+                setIsLoading(false);
+                toast.error(`Lỗi: ${result || 'Đã có lỗi xảy ra'}`);
             }
         } catch (error) {
             // Xử lý lỗi khi gọi API
-            alert(`Lỗi: ${error.message || 'Đã có lỗi xảy ra'}`);
+            setIsLoading(false);
+            toast.error(`Lỗi: ${error.message || 'Đã có lỗi xảy ra'}`);
         }
     };
     
     
-    const handleProfileSubmit = (event) => {
+    const handleProfileSubmit = async (event) => {
         event.preventDefault();
+        setIsProfilePopupOpen(false);
+        // Đánh dấu bắt đầu gửi dữ liệu
+        setIsLoading(true);
         const storedId = sessionStorage.getItem('userId');
-        fetch(`http://localhost:8081/api/employees/${storedId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        })
-            .then(response => {
-                if (response.ok) {
-                    toast.success("Bạn đã cập nhật thông tin thành công!");
-                    setIsProfilePopupOpen(false);
-                } else {
-                    toast.error('Đã xảy ra lỗi khi gửi dữ liệu.');
-                    setIsProfilePopupOpen(false);
-                    // Xử lý lỗi nếu cần
-                }
-            })
-            .catch(error => console.error('Lỗi:', error));
+        try {
+            const response = await fetch(`http://localhost:8081/api/employees/${storedId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+        
+            if (response.ok) {
+                setIsLoading(false);
+                toast.success("Bạn đã cập nhật thông tin thành công!");
+            } else {
+                setIsLoading(false);
+                toast.error('Đã xảy ra lỗi khi gửi dữ liệu.');
+                // Xử lý lỗi nếu cần
+            }
+        } catch (error) {
+            setIsLoading(false);
+            console.error('Lỗi:', error);
+            toast.error('Đã xảy ra lỗi khi gửi dữ liệu.');
+        }
+        
 
     };
     return (
         <nav className="flex items-center justify-between flex-wrap bg-teal-500 p-6">
+            {isLoading && (
+                <div className="fixed inset-0 bg-gray-700 bg-opacity-75 flex justify-center items-center z-50">
+                    <div className="animate-spin rounded-full h-20 w-20 border-t-2 border-b-2 border-teal-500"></div>
+                </div>
+            )}
             <div className="flex items-center flex-shrink-0 text-white mr-6">
                 <span className="font-semibold text-xl tracking-tight">Employee Leave Management</span>
             </div>
@@ -493,7 +524,7 @@ function Nav() {
                         progressClassName="toast-progress"
                         theme='colored'
                         transition={Zoom}
-                        autoClose={5000}
+                        autoClose={1000}
                         hideProgressBar={true}
                     ></ToastContainer>
         </nav>

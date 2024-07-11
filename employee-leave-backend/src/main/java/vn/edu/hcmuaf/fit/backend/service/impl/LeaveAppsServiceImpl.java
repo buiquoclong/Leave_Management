@@ -132,4 +132,11 @@ public class LeaveAppsServiceImpl implements LeaveAppsService {
         return leaveAppsRepository.save(existingLeaveApp);
     }
 
+    @Override
+    public void deleteLeaveAppsByID(int id) {
+        leaveAppsRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("LeaveApp", "Id", id));
+        leaveAppsRepository.deleteById(id);
+    }
+
 }

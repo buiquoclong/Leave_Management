@@ -62,4 +62,9 @@ public class LeaveAppsController {
     public List<LeaveApplications> getLeaveAppsByHandleBy(@PathVariable("handleBy") int handleBy) {
         return leaveAppsService.getLeaveAppsByHandleById(handleBy);
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteLeaveAppsById(@PathVariable ("id") int id) {
+        leaveAppsService.deleteLeaveAppsByID(id);
+        return new ResponseEntity<>("LeaveApps " + id + " is deleted successfully", HttpStatus.OK);
+    }
 }
