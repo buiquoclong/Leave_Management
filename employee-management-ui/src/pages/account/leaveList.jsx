@@ -31,7 +31,8 @@ export default function LeaveList() {
             })
             .then((data) => {
                 console.log(data + "data");
-                setLeaveList(data);
+                const sortedData = data.sort((a, b) => b.id - a.id);
+                setLeaveList(sortedData);
                 console.log(" leaveList after set" + leaveList);
             })
             .catch((error) => console.error("Error fetching data:", error));
