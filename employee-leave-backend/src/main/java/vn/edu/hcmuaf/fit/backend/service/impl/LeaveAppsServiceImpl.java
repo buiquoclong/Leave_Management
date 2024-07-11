@@ -1,7 +1,9 @@
 package vn.edu.hcmuaf.fit.backend.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import vn.edu.hcmuaf.fit.backend.Util.Email;
 import vn.edu.hcmuaf.fit.backend.dto.LeaveApplicationsDTO;
 import vn.edu.hcmuaf.fit.backend.exception.ResourceNotFoundException;
 import vn.edu.hcmuaf.fit.backend.model.Employee;
@@ -12,13 +14,15 @@ import vn.edu.hcmuaf.fit.backend.service.LeaveAppsService;
 
 import java.time.LocalDateTime;
 import java.time.Period;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class LeaveAppsServiceImpl implements LeaveAppsService {
     private LeaveAppsRepository leaveAppsRepository;
-    private  EmployeeRepository employeeRepository;
+    private EmployeeRepository employeeRepository;
+    @Autowired
+    private Email email;
 
     @Autowired
     private EmployeeServiceImpl employeeService;
@@ -30,17 +34,21 @@ public class LeaveAppsServiceImpl implements LeaveAppsService {
 
     // Create a new leave application
     @Override
-    public LeaveApplications saveLeaveApps(int employeeId, LeaveApplicationsDTO leaveAppsDTO) {
+    public LeaveApplications saveLeaveApps(int employeeId, LeaveApplicationsDTO leaveAppsDTO) throws Exception {
         Employee employee = employeeRepository.findById(employeeId).orElseThrow(() ->
                 new ResourceNotFoundException("Employee", "Id", leaveAppsDTO.getId()));
-        System.out.println(employeeId);
-//        System.out.println(employee.getBossId());
+
         LeaveApplications leaveApplications = new LeaveApplications();
         leaveApplications.setId(leaveAppsDTO.getId());
         leaveApplications.setEmployee(employee);
         leaveApplications.setReason(leaveAppsDTO.getReason());
         leaveApplications.setFrom(leaveAppsDTO.getFrom());
         leaveApplications.setTo(leaveAppsDTO.getTo());
+        if (employee.getBossId() != null) {
+            leaveApplications.setHandleBy(employee.getBossId());
+        } else {
+            throw new Exception("Nhân viên hiện tại chưa có người quản lý trên hệ thống vì thế không thể tạo đơn xin nghỉ phép. Vui lòng thử lại sau");
+        }
         leaveApplications.setHandleBy(employee.getBossId());
         leaveApplications.setStatus(2);
         leaveApplications.setCreatedAt(LocalDateTime.now());
@@ -66,12 +74,12 @@ public class LeaveAppsServiceImpl implements LeaveAppsService {
 
     @Override
     public List<LeaveApplications> getLeaveAppsByHandleById(int handleBy) {
-        return leaveAppsRepository.findByHandleById(handleBy);
+        return leaveAppsRepository.findByHandleById(handleBy, Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
     // Approve leave application from boss
     @Override
-    public LeaveApplications approveLeaveAppsByID(int id, LeaveApplicationsDTO leaveApps) {
+    public LeaveApplications approveLeaveAppsByID(int id, LeaveApplicationsDTO leaveApps) throws Exception {
         LeaveApplications existingLeaveApp = leaveAppsRepository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException("Leave Application", "Id", id));
 
@@ -80,17 +88,44 @@ public class LeaveAppsServiceImpl implements LeaveAppsService {
 //        existingLeaveApp.setHandleBy();
         LeaveApplications leaveApplications = getLeaveAppsByID(id);
         Employee employee = employeeService.getEmployeeByID(leaveApplications.getEmployee().getId());
-        if(leaveApps.getStatus()==1){
-            Period period = Period.between(leaveApplications.getFrom(),leaveApplications.getTo() );
+        if (leaveApps.getStatus() == 1) {
+            Period period = Period.between(leaveApplications.getFrom(), leaveApplications.getTo());
             int days = period.getDays();
-            if(days>employee.getDayOffRemaining()){
+            if (days > employee.getDayOffRemaining()) {
                 leaveApps.setStatus(0);
                 return leaveAppsRepository.save(existingLeaveApp);
             }
-            employee.setDayOffRemaining(employee.getDayOffRemaining()-days);
+            employee.setDayOffRemaining(employee.getDayOffRemaining() - days);
             employeeRepository.save(employee);
         }
         existingLeaveApp.setUpdatedAt(LocalDateTime.now());
+
+//        send mail
+        Employee sender = employeeService.getEmployeeByID(existingLeaveApp.getEmployee().getId());
+        Employee receiver = employeeService.getEmployeeByID(existingLeaveApp.getHandleBy().getId());
+        String status = "";
+        String reason = "";
+        switch (leaveApps.getStatus()) {
+            case 0:
+                status = "Không chấp nhận";
+                break;
+            case 1:
+                status = "Chấp nhận";
+                break;
+            default:
+                status = "Đang chờ được xét duyệt";
+                break;
+        }
+        if (leaveApps.getReasonReject().isEmpty()) {
+            reason = "Không có.";
+        }
+        Map<String, String> values = Map.of(
+                "leaveID", String.valueOf(existingLeaveApp.getId()),
+                "sender", sender.getFullName(),
+                "receiver", receiver.getFullName(),
+                "status", status,
+                "reason", reason);
+        email.sendMailWithTemplate(receiver.getEmail(), "Xử lý yêu cầu nghỉ phép", "handle-request", values);
 
         return leaveAppsRepository.save(existingLeaveApp);
     }
