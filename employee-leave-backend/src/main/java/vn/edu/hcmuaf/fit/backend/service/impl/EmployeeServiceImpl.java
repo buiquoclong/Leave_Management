@@ -76,9 +76,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public String login(String username, String pass) {
         String encryptedPass = passwordUtil.hashPassword(pass);
-        Employee e = employeeRepository.findByUsernameAndPassword(username, encryptedPass);
-//        System.out.println(e.getUsername());
-        if (e != null) return e.getId() + "";
+        Employee e = employeeRepository.findByUsername(username);
+        if (e != null && passwordUtil.checkPass(pass, e.getPassword())) {
+            return "Đăng nhập thành công!";
+        }
         return "Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin đăng nhập!";
     }
 
