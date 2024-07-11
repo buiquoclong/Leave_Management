@@ -10,7 +10,6 @@ import java.util.List;
 public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
 
     Employee findByUsernameAndPassword(String username, String password);
-    Employee findByUsername(String username);
     Employee findByEmail(String email);
     List<Employee> findByBossId_Id(int bossId);
 }
