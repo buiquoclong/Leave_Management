@@ -29,7 +29,8 @@ export default function RequestList() {
             })
             .then((data) => {
                 console.log(data + "data");
-                setRequestList(data);
+                const sortedData = data.sort((a, b) => b.id - a.id);
+                setRequestList(sortedData);
                 console.log(" requestList after set" + requestList);
             })
             .catch((error) => console.error("Error fetching data:", error));
