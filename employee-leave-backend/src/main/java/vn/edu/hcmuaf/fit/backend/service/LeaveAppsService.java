@@ -13,5 +13,5 @@ public interface LeaveAppsService {
     List<LeaveApplications> getLeaveAppsByEmployeeId(int employeeId);
     List<LeaveApplications> getLeaveAppsByHandleById(int handleBy);
     LeaveApplications approveLeaveAppsByID(int id, LeaveApplicationsDTO leaveApps) throws Exception;
-//    void deleteLeaveAppsByID(int id);
+    void deleteLeaveAppsByID(int id);
 }
