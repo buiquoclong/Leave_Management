@@ -37,7 +37,22 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Employee saveEmployee(Employee employee) {
+    public Employee saveEmployee(EmployeeDTO employeeDTO) {
+        Employee employee = new Employee();
+
+        Employee boss = employeeRepository.findById(employeeDTO.getBossId()).orElseThrow(() ->
+                new ResourceNotFoundException("Boss", "Id", employeeDTO.getBossId()));
+
+        employee.setUsername(employeeDTO.getUsername());
+        employee.setPassword(passwordUtil.hashPassword(employeeDTO.getPassword()));
+        employee.setEmail(employeeDTO.getEmail());
+        employee.setFullName(employeeDTO.getFullName());
+        employee.setBossId(boss);
+        employee.setPosition(employeeDTO.getPosition());
+        employee.setDayOffRemaining(12);
+        employee.setFirstDayOfWork(LocalDateTime.now());
+        employee.setCreatedAt(LocalDateTime.now());
+        employee.setUpdatedAt(LocalDateTime.now());
         return employeeRepository.save(employee);
     }
 

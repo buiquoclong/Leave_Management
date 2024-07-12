@@ -312,6 +312,9 @@ function Nav() {
                     <Link href="/account/requestList" passHref className={`block mt-4 lg:inline-block lg:mt-0 ${router.pathname === '/account/requestList' ? 'text-white' : 'text-teal-200'} hover:text-white font-semibold mr-4`}>
                             Leave Request
                     </Link>
+                    <Link href="/account/employees" passHref className={`block mt-4 lg:inline-block lg:mt-0 ${router.pathname === '/account/employees' ? 'text-white' : 'text-teal-200'} hover:text-white font-semibold mr-4`}>
+                            Employee Manager
+                    </Link>
                 </div>
                 <div>
                     <button
