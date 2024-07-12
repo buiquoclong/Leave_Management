@@ -1,5 +1,4 @@
-"use client";
-// pages/auth/reset-password.jsx
+ // pages/auth/reset-password.jsx
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';

@@ -15,7 +15,7 @@ function Nav() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
     const [isLoading , setIsLoading] = useState(false);
-
+    const [bossId, setBossId] = useState(null);
     const router = useRouter();
     const dropdownRef = useRef(null);
     const openPopup = () => setIsPopupOpen(true);
@@ -47,11 +47,6 @@ function Nav() {
     useEffect(() => {
         const fetchEmployeeData = async () => {
             try {
-                // Lấy ID từ localStorage
-                // const storedId = localStorage.getItem('employeeId');
-                // if (!storedId) {
-                //     throw new Error('Employee ID not found in localStorage');
-                // }
                 const storedId = sessionStorage.getItem('userId');
                 if (!storedId) {
                     throw new Error('Employee ID not found in localStorage');
@@ -74,6 +69,7 @@ function Nav() {
                     fullName: data.fullName,
                     role: data.position,
                 });
+                setBossId(data.bossId);
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
@@ -303,18 +299,19 @@ function Nav() {
                 className="w-full block flex-grow lg:flex lg:items-center lg:w-auto hidden lg:block"
             >
                 <div className="text-sm lg:flex-grow">
-                    <Link href="/" passHref className={`block mt-4 lg:inline-block lg:mt-0 ${router.pathname === '/' ? 'text-white' : 'text-teal-200'} hover:text-white font-semibold mr-4`}>
-                            Home
-                    </Link>
                     <Link href="/account/leaveList" passHref className={`block mt-4 lg:inline-block lg:mt-0 ${router.pathname === '/account/leaveList' ? 'text-white' : 'text-teal-200'} hover:text-white font-semibold mr-4`}>
                             Leave List
                     </Link>
-                    <Link href="/account/requestList" passHref className={`block mt-4 lg:inline-block lg:mt-0 ${router.pathname === '/account/requestList' ? 'text-white' : 'text-teal-200'} hover:text-white font-semibold mr-4`}>
-                            Leave Request
-                    </Link>
-                    <Link href="/account/employees" passHref className={`block mt-4 lg:inline-block lg:mt-0 ${router.pathname === '/account/employees' ? 'text-white' : 'text-teal-200'} hover:text-white font-semibold mr-4`}>
-                            Employee Manager
-                    </Link>
+                    {!bossId && (
+                        <>
+                            <Link href="/account/requestList" passHref className={`block mt-4 lg:inline-block lg:mt-0 ${router.pathname === '/account/requestList' ? 'text-white' : 'text-teal-200'} hover:text-white font-semibold mr-4`}>
+                                    Leave Request
+                            </Link>
+                            <Link href="/account/employees" passHref className={`block mt-4 lg:inline-block lg:mt-0 ${router.pathname === '/account/employees' ? 'text-white' : 'text-teal-200'} hover:text-white font-semibold mr-4`}>
+                                    Employee Manager
+                            </Link>
+                        </>
+                    )}
                 </div>
                 <div>
                     <button

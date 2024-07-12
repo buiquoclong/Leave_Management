@@ -1,5 +1,4 @@
-"use client";
-import { Layout } from "@/components/account";
+ import { Layout } from "@/components/account";
 import React, { useState, useEffect } from "react";
 import Datepicker from "react-tailwindcss-datepicker";
 
