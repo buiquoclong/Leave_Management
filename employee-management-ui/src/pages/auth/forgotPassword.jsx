@@ -1,5 +1,4 @@
-"use client";
-import { useState } from "react";
+ import { useState } from "react";
 import { toast, ToastContainer, Zoom } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Layout } from "@/components/account";

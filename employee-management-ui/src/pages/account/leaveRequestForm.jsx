@@ -1,5 +1,4 @@
-// Trang gọi cái này phải có : "use client";
-import React, {useState, useEffect} from "react";
+// Trang gọi cái này phải có :  import React, {useState, useEffect} from "react";
 import Datepicker from "react-tailwindcss-datepicker";
 import {Layout} from "@/components/account";
 export default function LeaveRequestForm() {

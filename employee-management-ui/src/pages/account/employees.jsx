@@ -34,15 +34,12 @@ const Employees = () => {
     }
 
     const fetchEmployees = async () => {
-        setIsLoading(true);
       try {
         const response = await fetch(`http://localhost:8081/api/employees/get-by-boss-id/${userId}`);
         const data = await response.json();
         setEmployees(data);
-        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching employees:', error);
-        setIsLoading(false);
       }
     };
 

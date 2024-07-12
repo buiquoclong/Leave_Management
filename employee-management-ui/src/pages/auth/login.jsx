@@ -1,5 +1,4 @@
-"use client";
-import { useEffect, useState } from "react";
+ import { useEffect, useState } from "react";
 import { toast, ToastContainer, Zoom } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useRouter } from 'next/navigation'
@@ -11,10 +10,6 @@ export default function Login() {
     const [pass, setPassword] = useState('');
     // const [email, setEmail] = useState("");
     const router = useRouter();
-
-    // const handleButtonClick = () => {
-    //     router.push('/');
-    //   };
 
     // Login bình thường
     const ProceedLogin = async (e) => {
