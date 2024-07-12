@@ -127,7 +127,8 @@ public class LeaveAppsServiceImpl implements LeaveAppsService {
                 "receiver", receiver.getFullName(),
                 "status", status,
                 "reason", reason);
-        email.sendMailWithTemplate(receiver.getEmail(), "Xử lý yêu cầu nghỉ phép", "handle-request", values);
+        System.out.println(sender.getEmail()+" : "+ sender.getFullName());
+        email.sendMailWithTemplate(sender.getEmail(), "Xử lý yêu cầu nghỉ phép", "handle-request", values);
 
         return leaveAppsRepository.save(existingLeaveApp);
     }
