@@ -117,9 +117,9 @@ export default function Login() {
                             </Link>
 
                         </p>
-                        <Link href="/auth/signup" passHref className={`className="inline-block py-2 px-4 rounded-lg text-teal-200 hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors duration-300 ease-in-out ${router.pathname === '/auth/signup' ? 'text-blue-500' : 'text-teal-200'} hover:text-blue-500 font-semibold mr-4`}>
+                        {/* <Link href="" passHref className={`className="inline-block py-2 px-4 rounded-lg text-teal-200 hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors duration-300 ease-in-out ${router.pathname === '/auth/signup' ? 'text-blue-500' : 'text-teal-200'} hover:text-blue-500 font-semibold mr-4`}>
                             Sign up
-                        </Link>
+                        </Link> */}
                     </form>
                     <ToastContainer
                         className="toast-container"
