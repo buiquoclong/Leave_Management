@@ -4,6 +4,7 @@ import { toast, ToastContainer, Zoom } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useRouter } from 'next/navigation'
 import { Layout } from "@/components/account";
+import Link from "next/link";
 
 export default function Login() {
     const [username, setUsername] = useState('');
@@ -33,7 +34,7 @@ export default function Login() {
         try {
             const response = await fetch("http://localhost:8081/api/login", {
                 method: "POST",
-                headers: {'content-type': 'application/json'},
+                headers: { 'content-type': 'application/json' },
                 body: JSON.stringify(loginDTO)
             });
             console.log("response" + response.status);
@@ -44,7 +45,7 @@ export default function Login() {
                     sessionStorage.setItem('userId', userId);
                     const response = await fetch(`http://localhost:8081/api/employees/${userId}`, {
                         method: "GET",
-                        headers: {'content-type': 'application/json'}
+                        headers: { 'content-type': 'application/json' }
                     });
                     const userInfo = await response.json();
                     console.log(userInfo);
@@ -73,7 +74,7 @@ export default function Login() {
             result = false;
             console.log('Please Enter Password');
         }
-        if (pass.length <8) {
+        if (pass.length < 8) {
             result = false;
             console.log('Password must be at least 8 characters long');
             alert('Password must be at least 8 characters long');
@@ -85,7 +86,7 @@ export default function Login() {
             <Layout>
                 <main className="flex min-h-screen flex-col items-center justify-between p-24">
                     <form id="yourFormId"
-                          className="flex flex-col items-center justify-between w-full max-w-md p-8 bg-white rounded-xl shadow-lg dark:bg-zinc-800/30">
+                        className="flex flex-col items-center justify-between w-full max-w-md p-8 bg-white rounded-xl shadow-lg dark:bg-zinc-800/30">
                         <h1 className="mb-8 text-3xl font-semibold text-center">Login</h1>
                         <input
                             value={username}
@@ -109,12 +110,16 @@ export default function Login() {
                             Login
                         </button>
                         <p className="text-sm opacity-50">
-                            {/* eslint-disable-next-line react/no-unescaped-entities */}
-                            Don't have an account?{" "}
-                            <a href="#" className="text-blue-500">
-                                Sign up
-                            </a>
+                           
+                            Forgot your password?{" "}
+                            <Link href="/auth/forgotPassword" passHref className={`block mt-4 lg:inline-block lg:mt-0 ${router.pathname === '/auth/forgotPassword' ? 'text-blue-500' : 'text-teal-200'} hover:text-blue-500 font-semibold mr-4`}>
+                                Reset here
+                            </Link>
+
                         </p>
+                        <Link href="/auth/signup" passHref className={`className="inline-block py-2 px-4 rounded-lg text-teal-200 hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors duration-300 ease-in-out ${router.pathname === '/auth/signup' ? 'text-blue-500' : 'text-teal-200'} hover:text-blue-500 font-semibold mr-4`}>
+                            Sign up
+                        </Link>
                     </form>
                     <ToastContainer
                         className="toast-container"
