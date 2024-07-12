@@ -12,52 +12,9 @@ export default function RequestList() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [userInfo, setUserInfo] = useState({});
-    const [isLoading , setIsLoading] = useState(false);
-    let userId = 0;
-    if (typeof window !== 'undefined') {
-
-        userId = sessionStorage.getItem('userId');
-    }
-    useEffect(() => {
-        fetch(`http://localhost:8081/api/employees/${userId}`).then((response) => response.json()).then((data) => {
-            setUserInfo(data);
-            console.log(data);
-        }).catch((error) => console.error("Error fetching data:", error));
-    }, []);
-
-    useEffect(() => {
-        fetch(`http://localhost:8081/api/leave-applications/get-by-handle-by/${userId}`)
-            .then((response) => {
-                return response.json()
-            })
-            .then((data) => {
-                console.log(data + "data");
-                const sortedData = data.sort((a, b) => b.id - a.id);
-                setRequestList(sortedData);
-                console.log(" requestList after set" + requestList);
-            })
-            .catch((error) => console.error("Error fetching data:", error));
-    }, []);
-    const formatDate = (date) => {
-        const d = new Date(date);
-        return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-    }
-
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = requestList.slice(indexOfFirstItem, indexOfLastItem);
-    const pageNumbers = [];
-    for (let i = 1; i <= Math.ceil(requestList.length / itemsPerPage); i++) {
-        pageNumbers.push(i);
-    }
-    // man hinh chi tiet don xin nghi
+    const [isLoading, setIsLoading] = useState(false);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
-    const openPopup = (idLeave) => {
-        console.log("idLeave" + idLeave);
-        setIsPopupOpen(true);
-        getDetailByItineraryId(idLeave);
-    }
-    const closePopup = () => setIsPopupOpen(false);
+    const [selectedLeaveId, setSelectedLeaveId] = useState(null);
     const [fullName, setFullName] = useState('');
     const [position, setPosition] = useState('');
     const [dateStart, setDateStart] = useState('');
@@ -65,28 +22,43 @@ export default function RequestList() {
     const [reason, setReason] = useState('');
     const [reasonBoss, setReasonBoss] = useState('');
     const [status, setStatus] = useState();
-    let [itinerarieData,setItinerarieData ]=useState({}); 
-    const [statusChanged, setStatusChanged] = useState(false);
+    const userId = (typeof window !== 'undefined') ? sessionStorage.getItem('userId') : 0;
 
-    //  hien thi danh sach
     useEffect(() => {
-        getDetailByItineraryId(userId); // id form xin nghi
-
+        fetch(`http://localhost:8081/api/employees/${userId}`)
+            .then((response) => response.json())
+            .then((data) => setUserInfo(data))
+            .catch((error) => console.error("Error fetching user data:", error));
     }, [userId]);
+
+    useEffect(() => {
+        fetch(`http://localhost:8081/api/leave-applications/get-by-handle-by/${userId}`)
+            .then((response) => response.json())
+            .then((data) => setRequestList(data.sort((a, b) => b.id - a.id)))
+            .catch((error) => console.error("Error fetching leave applications:", error));
+    }, [userId]);
+
+    const openPopup = (idLeave) => {
+        setSelectedLeaveId(idLeave);
+        setIsPopupOpen(true);
+        getDetailByItineraryId(idLeave);
+    };
+
+    const closePopup = () => setIsPopupOpen(false);
+
     const getDetailByItineraryId = async (idLeave) => {
         try {
             const response = await fetch(`http://localhost:8081/api/leave-applications/${idLeave}`);
-            let employeeData = {};
             if (response.ok) {
-                itinerarieData = await response.json();
-                employeeData = itinerarieData.employee;
-                setFullName(employeeData.fullName); // Assign the value to name state variables
-                setPosition(employeeData.position); // Assign the value to content state variable
-                setDateStart(itinerarieData.from); // Assign the value to dateStart state variable
-                setDateEnd(itinerarieData.to); // Assign the value to dateEnd state variable
-                setReason(itinerarieData.reason);
-                setReasonBoss(itinerarieData.reason_reject);
-                setStatus(itenerarieData.status);
+                const data = await response.json();
+                const employeeData = data.employee;
+                setFullName(employeeData.fullName);
+                setPosition(employeeData.position);
+                setDateStart(data.from);
+                setDateEnd(data.to);
+                setReason(data.reason);
+                setReasonBoss(data.reason_reject);
+                setStatus(data.status);
             } else {
                 console.log('Failed to fetch itinerary data');
             }
@@ -94,88 +66,55 @@ export default function RequestList() {
             console.log('Error:', error);
         }
     };
-    useEffect(()=>{
-        if(statusChanged){
-            window.location.reload()
-        }
 
-    }),[statusChanged]
-
-    
-    const handleReject = async (idLeave) => {
+    const handleUpdateStatus = async (idLeave, newStatus) => {
         closePopup();
         setIsLoading(true);
-    const finalReasonBoss = reasonBoss || '';
-    console.log(finalReasonBoss);
         try {
             const response = await fetch(`http://localhost:8081/api/leave-applications/approve/${idLeave}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    reasonReject: finalReasonBoss,
-                    status: 0,
-                }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus, reasonReject: reasonBoss || '' })
             });
     
             if (response.ok) {
-                setIsLoading(false);
-                setStatusChanged(true);
                 const data = await response.json();
-                console.log(data);
-                
-                setReasonBoss('');
-                
-                alert("Đơn đã được từ chối.");
-                if (data.status === 0) {
-                    toast.success(data.message);
-                } else {
-                    toast.error(data.message);
+                if (newStatus === 1) {
+                    toast.success('Đơn đã được duyệt thành công.');
+                } else if (newStatus === 0) {
+                    toast.error('Đơn đã bị từ chối.');
                 }
-            }
-        } catch (error) {
-            console.log('Error:', error);
-        }
-    };
-    
-    const handleApprove = async (idleave) => {
-        
-        closePopup();
-        setIsLoading(true);
-    const finalReasonBoss = reasonBoss || '';
-        console.log(finalReasonBoss);
-        try {
-            const response = await fetch(`http://localhost:8081/api/leave-applications/approve/${idleave}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    status: 1,
-                    reasonReject: finalReasonBoss
-                })
-            });
-    
-            if (response.ok) {
-                setIsLoading(false);
-                setStatusChanged(true);
-                const data = await response.json();
-                console.log(data);
-                alert("Đơn đã được duyệt thành công.");
-                setReasonBoss('');
+                // Cập nhật trạng thái của đơn nghỉ trong danh sách
+                setRequestList((prevList) =>
+                    prevList.map((item) =>
+                        item.id === idLeave ? { ...item, status: newStatus } : item
+                    )
+                );
             } else {
-                setIsLoading(false);
-                console.log('Approval failed');
-                alert("Đã xảy ra lỗi khi duyệt đơn. Vui lòng thử lại sau.");
+                toast.error('Xảy ra lỗi khi duyệt đơn.'); // Hiển thị toast khi thất bại
             }
         } catch (error) {
-            setIsLoading(false);
             console.log('Error:', error);
-            alert("Đã xảy ra lỗi khi duyệt đơn. Vui lòng thử lại sau.");
+            toast.error('Xảy ra lỗi khi duyệt đơn.'); // Hiển thị toast khi có lỗi
+        } finally {
+            setIsLoading(false);
         }
     };
     
+
+    const handleReject = (idLeave) => handleUpdateStatus(idLeave, 0);
+    const handleApprove = (idLeave) => handleUpdateStatus(idLeave, 1);
+
+    const formatDate = (date) => new Date(date).toLocaleDateString('vi-VN');
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = requestList.slice(indexOfFirstItem, indexOfLastItem);
+
+    const pageNumbers = [];
+    for (let i = 1; i <= Math.ceil(requestList.length / itemsPerPage); i++) {
+        pageNumbers.push(i);
+    }
 
     return (
         <Layout>
@@ -196,18 +135,18 @@ export default function RequestList() {
                                 <thead className="bg-gray-200">
                                     <tr>
                                         <th className='py-2 px-4'>ID</th>
-                                        <th className='py-2 px-4'>From</th>
-                                        <th className='py-2 px-4'>To</th>
-                                        <th className='py-2 px-4'>Status</th>
-                                        <th className='py-2 px-4'>Action</th>
+                                        <th className='py-2 px-4'>Ngày bắt đầu</th>
+                                        <th className='py-2 px-4'>Ngày kết thúc</th>
+                                        <th className='py-2 px-4'>Trạng tháithái</th>
+                                        <th className='py-2 px-4'>Hành động</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {currentItems.map((leave, index) => (
                                         <tr key={index} className="border-t">
                                             <td className="py-2 px-4">{leave.id}</td>
-                                            <td className="py-2 px-4">{leave.from}</td>
-                                            <td className="py-2 px-4">{leave.to}</td>
+                                            <td className="py-2 px-4">{formatDate(leave.from)}</td>
+                                            <td className="py-2 px-4">{formatDate(leave.to)}</td>
                                             <td className="py-2 px-4">
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${leave.status === 1 ? 'bg-green-100 text-green-800' : leave.status === 0 ? 'bg-red-300 text-red-800' : 'bg-gray-400 text-black-800'}`}>
                                                     {leave.status === 1 ? 'Approved' : leave.status === 0 ? 'Rejected' : 'Pending'}
@@ -218,103 +157,7 @@ export default function RequestList() {
                                                     <button onClick={() => openPopup(leave.id)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                                         <FontAwesomeIcon icon={faEye} />
                                                     </button>
-                                                    <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                                                        <FontAwesomeIcon icon={faTrash} />
-                                                    </button>
                                                 </div>
-                                                {isPopupOpen && (
-                                                    <div className="fixed inset-0 bg-gray-700 bg-opacity-75 flex justify-center items-center z-50">
-                                                        <div className="p-6 bg-white rounded-lg w-full max-w-lg mx-4 sm:mx-0">
-                                                            <div className="flex justify-end">
-                                                                <button onClick={closePopup} className="text-gray-500 hover:text-gray-700 focus:outline-none">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                                    </svg>
-                                                                </button>
-                                                            </div>
-                                                            <h2 className="text-center text-2xl sm:text-3xl font-semibold mb-6">Chi tiết đơn nghỉ phép</h2>
-                                                            <form>
-                                                                <div className="mb-4 flex items-center">
-                                                                    <label htmlFor="fullName" className="block text-gray-700 w-1/3">Họ tên:</label>
-                                                                    <input
-                                                                        type="text"
-                                                                        id="fullName"
-                                                                        name="fullName"
-                                                                        value={fullName}
-                                                                        className="mt-1 block w-2/3 border border-gray-300 rounded-md bg-gray-200 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                                        readOnly
-                                                                    />
-                                                                </div>
-                                                                <div className="mb-4 flex items-center">
-                                                                    <label htmlFor="role" className="block text-gray-700 w-1/3">Chức vụ:</label>
-                                                                    <input
-                                                                        type="text"
-                                                                        id="role"
-                                                                        name="role"
-                                                                        value={position}
-                                                                        className="mt-1 block w-2/3 border border-gray-300 rounded-md bg-gray-200 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                                        readOnly
-                                                                    />
-                                                                </div>
-                                                                <div className="mb-4 flex items-center">
-                                                                    <label htmlFor="dateStart" className="block text-gray-700 w-1/3">Ngày bắt đầu:</label>
-                                                                    <input
-                                                                        type="date"
-                                                                        id="dateStart"
-                                                                        name="dateStart"
-                                                                        value={dateStart}
-                                                                        className="mt-1 block w-2/3 border border-gray-300 rounded-md bg-gray-200 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                                        readOnly
-                                                                    />
-                                                                </div>
-                                                                <div className="mb-4 flex items-center">
-                                                                    <label htmlFor="dateEnd" className="block text-gray-700 w-1/3">Ngày kết thúc:</label>
-                                                                    <input
-                                                                        type="date"
-                                                                        id="dateEnd"
-                                                                        name="dateEnd"
-                                                                        value={dateEnd}
-                                                                        className="mt-1 block w-2/3 border border-gray-300 rounded-md bg-gray-200 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                                        readOnly
-                                                                    />
-                                                                </div>
-                                                                <div className="mb-4 flex items-center">
-                                                                    <label htmlFor="reason" className="block text-gray-700 w-1/3">Lý do xin nghỉ:</label>
-                                                                    <textarea
-                                                                        id="reason"
-                                                                        name="reason"
-                                                                        rows="4"
-                                                                        value={reason}
-                                                                        className="mt-1 block w-2/3 border border-gray-300 rounded-md bg-gray-200 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                                        maxLength={100}
-                                                                        readOnly
-                                                                    ></textarea>
-                                                                </div>
-                                                                <div className="mb-4 flex items-center">
-                                                                    <label htmlFor="message" className="block text-gray-700 w-1/3">Lý do từ chối đơn nghỉ (boss):</label>
-                                                                    <textarea
-                                                                        id="message"
-                                                                        name="message"
-                                                                        rows="4"
-                                                                        className="mt-1 block w-2/3 border border-gray-300 rounded-md bg-gray-200 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                                        maxLength={100}
-                                                                        value={reasonBoss}
-                                                                        onChange={(e) => setReasonBoss(e.target.value)}
-                                                                    ></textarea>
-                                                                </div>
-                                                                <div className="flex justify-center gap-4">
-                                                                    <button type="button" onClick={() => handleReject(leave.id)} className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                                                        Từ chối
-                                                                    </button>
-                                                                    <button type="button" onClick={() => handleApprove(leave.id)} className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                                                        Chấp nhận
-                                                                    </button>
-                                                                </div>
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                )}
-
                                             </td>
                                         </tr>
                                     ))}
@@ -348,9 +191,56 @@ export default function RequestList() {
                         </div>
                     </div>
                 </div>
+                {isPopupOpen && selectedLeaveId && (
+                    <div className="fixed inset-0 bg-gray-700 bg-opacity-75 flex justify-center items-center z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg relative">
+                            <button onClick={closePopup} className="absolute top-2 right-2 text-gray-500 hover:text-black">
+                                <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                                    <path d="M18.3 5.71c-.39-.39-1.02-.39-1.41 0L12 10.59 7.11 5.7a.996.996 0 10-1.41 1.41L10.59 12l-4.88 4.88c-.39.39-.39 1.02 0 1.41s1.02.39 1.41 0L12 13.41l4.88 4.88c.39.39 1.02.39 1.41 0s.39-1.02 0-1.41L13.41 12l4.88-4.88c.39-.39.39-1.02 0-1.41z"/>
+                                </svg>
+                            </button>
+                            <h2 className="text-2xl font-semibold mb-4">Chi tiết đơn xin nghỉ</h2>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p><strong>Họ tên:</strong> {fullName}</p>
+                                    <p><strong>Vị trí:</strong> {position}</p>
+                                    <p><strong>Ngày bắt đầu:</strong> {formatDate(dateStart)}</p>
+                                    <p><strong>Ngày kết thúc:</strong> {formatDate(dateEnd)}</p>
+                                    <p><strong>Lý do xin nghỉ:</strong> {reason}</p>
+                                    {status === 0 && <p><strong>Lý do từ chối:</strong> {reasonBoss}</p>}
+                                </div>
+                                <div className="flex flex-col justify-center">
+                                    <button
+                                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4"
+                                        onClick={() => handleApprove(selectedLeaveId)}
+                                    >
+                                        Approve
+                                    </button>
+                                    <button
+                                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                                        onClick={() => handleReject(selectedLeaveId)}
+                                    >
+                                        Reject
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <label className="block text-gray-700 text-sm font-bold mb-2">
+                                    Lý do từ chối
+                                </label>
+                                <textarea
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    rows="4"
+                                    value={reasonBoss}
+                                    onChange={(e) => setReasonBoss(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <ToastContainer
-                        containerId="requestList"
-                        position="top-right"    
+                        containerId={requestList}
+                        position="top-center"    
                         className="toast-container"
                         toastClassName="toast"
                         bodyClassName="toast-body"
@@ -361,9 +251,6 @@ export default function RequestList() {
                         hideProgressBar={true}
                     ></ToastContainer>
             </div>
-            
         </Layout>
-    )
-        ;
+    );
 }
-

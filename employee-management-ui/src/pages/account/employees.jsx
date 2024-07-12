@@ -126,13 +126,13 @@ const Employees = () => {
             <table className="table-auto w-full text-center">
               <thead className="bg-gray-200">
                 <tr>
-                  <th className="py-2 px-4">Full Name</th>
+                  <th className="py-2 px-4">Họ tên</th>
                   <th className="py-2 px-4">Username</th>
                   <th className="py-2 px-4">Email</th>
-                  <th className="py-2 px-4">Position</th>
-                  <th className="py-2 px-4">First Day of Work</th>
-                  <th className="py-2 px-4">Day Off Remaining</th>
-                  <th className="py-2 px-4">Actions</th>
+                  <th className="py-2 px-4">Vị trí</th>
+                  <th className="py-2 px-4">Ngày bắt đầu làm việc</th>
+                  <th className="py-2 px-4">Số ngày nghỉ còn lại</th>
+                  <th className="py-2 px-4">Hành động</th>
                 </tr>
               </thead>
               <tbody>

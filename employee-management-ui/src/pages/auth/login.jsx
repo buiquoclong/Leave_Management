@@ -8,6 +8,7 @@ import Link from "next/link";
 export default function Login() {
     const [username, setUsername] = useState('');
     const [pass, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     // const [email, setEmail] = useState("");
     const router = useRouter();
 
@@ -26,6 +27,7 @@ export default function Login() {
         // Log the username and password
         console.log('Username:', username);
         console.log('Password:', pass);
+        setIsLoading(true);
         try {
             const response = await fetch("http://localhost:8081/api/login", {
                 method: "POST",
@@ -36,6 +38,7 @@ export default function Login() {
             console.log("response" + response);
             const userId = await response.json();
             if (response.status === 200) {
+                setIsLoading(false);
                 if (userId !== null) {
                     sessionStorage.setItem('userId', userId);
                     const response = await fetch(`http://localhost:8081/api/employees/${userId}`, {
@@ -47,9 +50,11 @@ export default function Login() {
                 }
                 router.push('/account/leaveList');
             } else {
+                setIsLoading(false);
                 toast.error('Failed: ' + response.status); // Hiển thị thông báo lỗi trong giao diện
             }
         } catch (err) {
+            setIsLoading(false);
             toast.error('Failed: ' + err.message); // Hiển thị thông báo lỗi trong giao diện
         }
     };
@@ -80,6 +85,11 @@ export default function Login() {
         <>
             <Layout>
                 <main className="flex min-h-screen flex-col items-center justify-between p-24">
+                {isLoading && (
+                    <div className="fixed inset-0 bg-gray-700 bg-opacity-75 flex justify-center items-center z-50">
+                        <div className="animate-spin rounded-full h-20 w-20 border-t-2 border-b-2 border-teal-500"></div>
+                    </div>
+                )}
                     <form id="yourFormId"
                         className="flex flex-col items-center justify-between w-full max-w-md p-8 bg-white rounded-xl shadow-lg dark:bg-zinc-800/30">
                         <h1 className="mb-8 text-3xl font-semibold text-center">Login</h1>
